@@ -43,7 +43,7 @@ def grab_files():
                     time.sleep(5)  # Wait before retrying
 
             if attempts == max_attempts:
-                messagebox.showerror("Error", f"Failed to connect after {max_attempts} attempts. Exiting.")
+                messagebox.showerror("Error", f"Failed to connect after {max_attempts} attempts. Exiting.")                
                 return
 
             # List files in the remote directory
@@ -68,6 +68,8 @@ def grab_files():
             terminal_output.insert(tk.END, f"All new .wpilog files downloaded to {wpilog_folder}\n")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to connect to RoboRio")
+            terminal_output.delete(1.0, tk.END)
+
 
     threading.Thread(target=run_grab_files).start()
 
