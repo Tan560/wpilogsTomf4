@@ -1,10 +1,16 @@
 import paramiko
 import os
 import time
+import argparse
+
+# Argument parser for the IP address
+parser = argparse.ArgumentParser(description="Download WPIlog files from SFTP server.")
+parser.add_argument("ip_address", type=str, help="The IP address of the SFTP server.")
+args = parser.parse_args()
 
 # SFTP server details
 current_path = os.getcwd()
-sftp_server = '10.99.97.2'
+sftp_server = args.ip_address  # Use the provided IP address
 sftp_user = 'lvuser'
 sftp_password = ''
 remote_file_path = 'logs/'
