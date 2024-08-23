@@ -1,32 +1,22 @@
-# WPILOG to CSV and MF4 Converter
+# WPILogsToMF4
 
-This repository contains a Python script to parse WPILOG files, convert them to CSV format, and then convert the CSV files to MF4 format using the `asammdf` library. This tool is useful for handling data logs from WPILOG files and converting them into more accessible formats for analysis.
+This project provides tools to convert `.WPIlog` files, commonly used in FRC robotics logging, to the `.MF4` format. It includes a Python-based GUI to streamline the process of downloading `.WPIlog` files from a robot via SFTP and converting them to `.MF4`.
 
 ## Features
 
-- **Parse WPILOG Files**: Extract entries and records from WPILOG files.
-- **Convert to CSV**: Transform parsed WPILOG data into CSV format.
-- **Convert to MF4**: Convert CSV data into MF4 format using `asammdf`.
-- **Dynamic Enum Creation**: Automatically create enums for string values in the CSV data.
+- **SFTP Download**: Connect to the robot's file system over SFTP and download `.WPIlog` files.
+- **WPIlog to MF4 Conversion**: Convert `.WPIlog` files to the `.MF4` format for easier data analysis and visualization.
+- **User-friendly GUI**: A Python GUI to manage file downloads and conversions with a simple interface.
 
-## Requirements
+## Getting Started
 
-- Python 3.x
-- `asammdf` library
-- `enum34` (for Python versions < 3.4)
+### Prerequisites
 
-## Installation
+Ensure you have Python 3.x installed along with the following packages:
 
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/yourusername/wpilog-converter.git
-    cd wpilog-converter
-    ```
+```bash
+pip install pandas tkinter paramiko
 
-2. Install the required Python packages:
-    ```bash
-    pip install asammdf enum34
-    ```
 
 ## Usage
 
