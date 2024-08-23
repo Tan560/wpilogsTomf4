@@ -1,6 +1,8 @@
 # wpilogsTomf4
 
-This project provides tools to convert `.wpilog` files, commonly used in FRC robotics logging, to `.csv` & `.mf4` format. It includes a Python-based GUI to streamline the process of downloading `.wpilog` files from a robot via SFTP and converting them to `.csv` & `.mf4`.
+This project provides tools to convert `.wpilog` files, commonly used in FRC robotics logging, to `.csv` & `.mf4` formats. It includes a Python-based GUI to streamline the process of downloading `.wpilog` files from a robot via SFTP and converting them to `.csv` & `.mf4`.
+
+![Alt text](GUI.png)
 
 ## Features
 
