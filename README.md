@@ -1,11 +1,12 @@
-# WPILogsToMF4
+# wpilogsTomf4
 
-This project provides tools to convert `.WPIlog` files, commonly used in FRC robotics logging, to the `.MF4` format. It includes a Python-based GUI to streamline the process of downloading `.WPIlog` files from a robot via SFTP and converting them to `.MF4`.
+This project provides tools to convert `.wpilog` files, commonly used in FRC robotics logging, to `.csv` & `.mf4` format. It includes a Python-based GUI to streamline the process of downloading `.wpilog` files from a robot via SFTP and converting them to `.csv` & `.mf4`.
 
 ## Features
 
-- **SFTP Download**: Connect to the robot's file system over SFTP and download `.WPIlog` files.
-- **WPIlog to MF4 Conversion**: Convert `.WPIlog` files to the `.MF4` format for easier data analysis and visualization.
+- **SFTP Download**: Connect to the robot's file system over SFTP and download `.wpilog` files.
+- **wpilog to csv Conversion**: Convert `.wpilog` files to the `.csv` format for easier data analysis and visualization.
+- **wpilog to mf4 Conversion**: Convert `.wpilog` files to the `.mf4` format for easier data analysis and visualization.
 - **User-friendly GUI**: A Python GUI to manage file downloads and conversions with a simple interface.
 
 ## Getting Started
@@ -35,11 +36,11 @@ Ensure you have Python 3.x installed along with the following packages:
 - Input the team number, which is used to generate the robot’s IP address.
 
 3. Download Files:
-- Click on the "Grab Files" button to download .WPIlog files from the robot.
+- Click on the "Grab Files" button to download .wpilog files from the robot and save them to the wpilog folder in the root directory
 
 4. Convert Files:
-- After downloading, click on the "Convert Files" button to convert the downloaded .WPIlog files to .MF4.
+- After downloading, click on the "Convert Files" button to convert the downloaded .wpilog files to .csv and .mf4.
 
 ## Scripts
 - 'main.py': The main GUI script that integrates file downloading and conversion.
-- 'WPILog2MF4.py': Converts .WPIlog files to the .MF4 format.
+- 'wpilog2mf4.py': Converts .wpilog files to the .csv and .mf4 format.
