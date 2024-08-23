@@ -125,8 +125,10 @@ def csv_to_mf4(csv_file, mf4_file):
     enums = {key: create_enum(key, values) for key, values in string_values.items()}
 
     # Second pass to convert values and collect data
+    
     with open(csv_file, 'r', encoding='utf-8') as infile:
         reader = csv.DictReader(infile)
+        print("Converting File: " + csv_file)
         for row in reader:
             timestamp = float(row['timestamp'])
             for key, value in row.items():
