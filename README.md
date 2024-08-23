@@ -16,9 +16,9 @@ Ensure you have Python 3.x installed along with the following packages:
 
 ```bash
 pip install pandas tkinter paramiko
+'''
 
-
-## Usage
+### Usage
 
 1. Run the GUI:
 
@@ -59,5 +59,4 @@ Processes all WPILOG files in the `wpilog` folder, converting them to CSV and MF
 
 ## Example
 
-```bash
 python wpilog_converter.py
