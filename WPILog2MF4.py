@@ -197,7 +197,6 @@ def main():
         entries, records = parse_wpilog(wpilog_path)
         wpilog_to_csv(entries, records, csv_file)
         csv_to_mf4(csv_file, mf4_file)
-        print(f"Conversion complete: {wpilog_file} -> {csv_file} -> {mf4_file}")
 
 if __name__ == "__main__":
     main()
