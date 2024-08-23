@@ -2,7 +2,7 @@
 
 This project provides tools to convert `.wpilog` files, commonly used in FRC robotics logging, to `.csv` & `.mf4` formats. It includes a Python-based GUI to streamline the process of downloading `.wpilog` files from a robot via SFTP and converting them to `.csv` & `.mf4`.
 
-![Alt text](GUI.png)
+![Alt text](/GUI.png)
 
 ## Features
 
@@ -15,12 +15,11 @@ This project provides tools to convert `.wpilog` files, commonly used in FRC rob
 
 ### Prerequisites
 
-Ensure you have Python 3.x installed along with the following packages:
-
-```bash
-    git clone https://github.com/yourusername/wpilog-converter.git
-    cd wpilog-converter
-```
+1. Ensure you have Python 3.x installed along with the following packages:
+    ```bash
+        git clone https://github.com/yourusername/wpilog-converter.git
+        cd wpilog-converter
+    ```
 
 2. Install the required Python packages:
     ```bash
