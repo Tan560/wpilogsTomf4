@@ -20,14 +20,16 @@ pip install pandas tkinter paramiko
 
 ## Usage
 
-1. Place your WPILOG files in a folder named `wpilog` in the root directory of the project.
+1. Run the GUI:
 
-2. Run the script:
-    ```bash
-    python wpilog_converter.py
-    ```
+2. Enter the Team Number:
+Input the team number, which is used to generate the robot’s IP address.
 
-3. The script will create `csv` and `mf4` folders in the root directory and save the converted files there.
+3. Download Files:
+Click on the "Grab Files" button to download .WPIlog files from the robot.
+
+4.Convert Files:
+After downloading, click on the "Convert Files" button to convert the downloaded .WPIlog files to .MF4.
 
 ## Script Overview
 
