@@ -123,4 +123,3 @@ terminal_output.pack(pady=10)
 
 # Run the GUI
 root.mainloop()
-#testing main block
