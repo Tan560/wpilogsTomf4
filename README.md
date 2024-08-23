@@ -15,15 +15,13 @@ This project provides tools to convert `.WPIlog` files, commonly used in FRC rob
 Ensure you have Python 3.x installed along with the following packages:
 
 ```bash
-pip install pandas tkinter paramiko
-
     git clone https://github.com/yourusername/wpilog-converter.git
     cd wpilog-converter
 ```
 
 2. Install the required Python packages:
     ```bash
-    pip install asammdf enum34
+    pip install asammdf enum34 pandas tkinter paramiko
     ```
 
 ## Usage
@@ -43,5 +41,5 @@ pip install pandas tkinter paramiko
 -After downloading, click on the "Convert Files" button to convert the downloaded .WPIlog files to .MF4.
 
 ## Scripts
--### 'main.py': The main GUI script that integrates file downloading and conversion.
--### 'WPILog2MF4.py': Converts .WPIlog files to the .MF4 format.
+- 'main.py': The main GUI script that integrates file downloading and conversion.
+- 'WPILog2MF4.py': Converts .WPIlog files to the .MF4 format.
