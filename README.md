@@ -32,13 +32,13 @@ Ensure you have Python 3.x installed along with the following packages:
     ```
 
 2. Enter the Team Number:
--Input the team number, which is used to generate the robot’s IP address.
+- Input the team number, which is used to generate the robot’s IP address.
 
 3. Download Files:
--Click on the "Grab Files" button to download .WPIlog files from the robot.
+- Click on the "Grab Files" button to download .WPIlog files from the robot.
 
 4. Convert Files:
--After downloading, click on the "Convert Files" button to convert the downloaded .WPIlog files to .MF4.
+- After downloading, click on the "Convert Files" button to convert the downloaded .WPIlog files to .MF4.
 
 ## Scripts
 - 'main.py': The main GUI script that integrates file downloading and conversion.
