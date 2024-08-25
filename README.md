@@ -38,7 +38,7 @@ This project provides tools to convert `.wpilog` files, commonly used in FRC rob
 - Input the team number, which is used to generate the robot’s IP address.
 
 3. Select the Date:
--Choose a date from the calendar widget. The program will only download .wpilog files modified on or after this date.
+- Choose a date from the calendar widget. The program will only download .wpilog files modified on or after this date.
 
 4. Download Files:
 - Click on the "Grab Files" button to download .wpilog files from the robot and save them to the wpilog folder in the root directory
