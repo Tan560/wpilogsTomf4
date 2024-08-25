@@ -43,7 +43,7 @@ This project provides tools to convert `.wpilog` files, commonly used in FRC rob
 4. Download Files:
 - Click on the "Grab Files" button to download .wpilog files from the robot and save them to the wpilog folder in the root directory
 
-4. Convert Files:
+5. Convert Files:
 - After downloading, click on the "Convert Files" button to convert the downloaded .wpilog files to .csv and .mf4.
 
 ## Scripts
