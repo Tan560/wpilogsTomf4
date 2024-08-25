@@ -1,11 +1,12 @@
 import paramiko
 import os
 import time
-import argparse
 import tkinter as tk
 from tkinter import messagebox, scrolledtext
+from tkcalendar import DateEntry
 import subprocess
 import threading
+from datetime import datetime
 
 # Function to convert team number to IP address
 def team_number_to_ip(team_number):
@@ -18,6 +19,8 @@ def team_number_to_ip(team_number):
 def grab_files():
     terminal_output.delete(1.0, tk.END)
     team_number = entry_team_number.get()
+    selected_date = cal.get_date()
+
     if not team_number.isdigit() or not (1 <= int(team_number) <= 9999):
         messagebox.showerror("Invalid Input", "Please enter a valid team number between 1 and 9999.")
         return
@@ -27,49 +30,50 @@ def grab_files():
 
     def run_grab_files():
         try:
-            # Attempt to connect to the SFTP server with retry logic
             max_attempts = 3
             attempts = 0
             while attempts < max_attempts:
                 try:
-                    terminal_output.insert(tk.END, f"Attempt {attempts + 1} to connect to SFTP server...")
+                    terminal_output.insert(tk.END, f"Attempt {attempts + 1} to connect to SFTP server...\n")
                     transport = paramiko.Transport((sftp_ip, 22))
                     transport.connect(username="lvuser", password="")
                     sftp = paramiko.SFTPClient.from_transport(transport)
-                    terminal_output.insert(tk.END, "Connected to SFTP server.")
-                    break  # Exit the loop if connection is successful
+                    terminal_output.insert(tk.END, "Connected to SFTP server.\n")
+                    break
                 except (paramiko.SSHException, TimeoutError) as e:
                     attempts += 1
-                    time.sleep(5)  # Wait before retrying
+                    time.sleep(5)
 
             if attempts == max_attempts:
-                messagebox.showerror("Error", f"Failed to connect after {max_attempts} attempts. Exiting.")                
+                messagebox.showerror("Error", f"Failed to connect after {max_attempts} attempts. Exiting.")
                 return
 
-            # List files in the remote directory
             remote_files = sftp.listdir("logs/")
-
-            # Download each .wpilog file if it doesn't already exist locally
             wpilog_folder = os.path.join(os.getcwd(), "wpilog")
             os.makedirs(wpilog_folder, exist_ok=True)
+
             for file in remote_files:
                 if file.endswith(".wpilog"):
-                    local_file_path = os.path.join(wpilog_folder, file)
-                    if not os.path.exists(local_file_path):
-                        remote_file = os.path.join("logs/", file)
-                        sftp.get(remote_file, local_file_path)
-                        terminal_output.insert(tk.END, f"Downloaded: {file}\n")
-                    else:
-                        terminal_output.insert(tk.END, f"Skipping {file}, already exists.\n")
+                    file_attr = sftp.stat(f"logs/{file}")
+                    file_mtime = datetime.fromtimestamp(file_attr.st_mtime)
 
-            # Close the SFTP connection
+                    # Download files modified on or after the selected date
+                    if file_mtime.date() >= selected_date:
+                        local_file_path = os.path.join(wpilog_folder, file)
+                        if not os.path.exists(local_file_path):
+                            sftp.get(f"logs/{file}", local_file_path)
+                            terminal_output.insert(tk.END, f"Downloaded: {file}\n")
+                        else:
+                            terminal_output.insert(tk.END, f"Skipping {file}, already exists.\n")
+                    else:
+                        terminal_output.insert(tk.END, f"Skipping {file}, modified before selected date.\n")
+
             sftp.close()
             transport.close()
-            terminal_output.insert(tk.END, f"All new .wpilog files downloaded to {wpilog_folder}\n")
+            terminal_output.insert(tk.END, f"All relevant .wpilog files downloaded to {wpilog_folder}\n")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to connect to RoboRio")
             terminal_output.delete(1.0, tk.END)
-
 
     threading.Thread(target=run_grab_files).start()
 
@@ -78,7 +82,6 @@ def convert_files():
     terminal_output.delete(1.0, tk.END)
 
     def run_convert_files():
-        # Call the second script
         try:
             process = subprocess.Popen(
                 ["python", "WPILog2MF4.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -95,12 +98,11 @@ def convert_files():
             messagebox.showerror("Error", f"Failed to convert files:\n{e}")
     
     threading.Thread(target=run_convert_files).start()
-    
-# Function to update terminal output in real-t
+
 # GUI Setup
 root = tk.Tk()
 root.title("WPIlog File Manager")
-root.geometry("800x400")  # Set window size to 300x400 pixels
+root.geometry("800x450")
 
 # Team Number Input
 label_team_number = tk.Label(root, text="Enter Team Number:")
@@ -108,6 +110,13 @@ label_team_number.pack(pady=5)
 
 entry_team_number = tk.Entry(root)
 entry_team_number.pack(pady=5)
+
+# Date Picker
+label_date = tk.Label(root, text="Select Date:")
+label_date.pack(pady=5)
+
+cal = DateEntry(root, width=12, background='darkblue', foreground='white', borderwidth=2)
+cal.pack(pady=5)
 
 # Grab Files Button
 btn_grab_files = tk.Button(root, text="Grab Files", command=grab_files)
