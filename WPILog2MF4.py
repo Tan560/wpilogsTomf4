@@ -158,10 +158,11 @@ def csv_to_mf4(csv_file, mf4_file):
 
     # Append signals to MDF with comments for enums
     for key, data in signals_dict.items():
-        if len(data['timestamps']) == 1:
-            # Add a second point at the end of the overall timeline
-            data['timestamps'].append(max_timestamp)  # Append the final timestamp
-            data['samples'].append(data['samples'][0])  # Duplicate the single sample value
+        # Add a second point at the end of the overall timeline
+        data['timestamps'].append(max_timestamp)  # Append the final timestamp
+        
+        # Duplicate the last sample value
+        data['samples'].append(data['samples'][-1])  # Append the last sample value
         
         signal = asammdf.Signal(
             samples=data['samples'],
