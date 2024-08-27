@@ -163,8 +163,8 @@ def csv_to_mf4(csv_file, mf4_file):
         
         # Add comments for enums
         if key in enums:
-            comments = {enum.value: enum.name for enum in enums[key]}
-            signal.comment = str(comments)
+            comments = "\n".join([f"{enum.value}: {enum.name}" for enum in enums[key]])
+            signal.comment = comments
         
         mdf.append(signal)
 
