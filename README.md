@@ -7,6 +7,7 @@ This project provides tools to convert `.wpilog` files, commonly used in FRC rob
 ## Features
 
 - **SFTP Download**: Connect to the robot's file system over SFTP and download `.wpilog` files.
+- **Date Filtering**: Select a date to download only .wpilog files modified on or after that date.
 - **wpilog to csv Conversion**: Convert `.wpilog` files to the `.csv` format for easier data analysis and visualization.
 - **wpilog to mf4 Conversion**: Convert `.wpilog` files to the `.mf4` format for easier data analysis and visualization.
 - **User-friendly GUI**: A Python GUI to manage file downloads and conversions with a simple interface.
@@ -23,7 +24,7 @@ This project provides tools to convert `.wpilog` files, commonly used in FRC rob
 
 2. Install the required Python packages:
     ```bash
-    pip install asammdf enum34 pandas tkinter paramiko
+    pip install asammdf enum34 pandas tkinter paramiko tkcalendar
     ```
 
 ## Usage
@@ -36,10 +37,13 @@ This project provides tools to convert `.wpilog` files, commonly used in FRC rob
 2. Enter the Team Number:
 - Input the team number, which is used to generate the robot’s IP address.
 
-3. Download Files:
+3. Select the Date:
+- Choose a date from the calendar widget. The program will only download .wpilog files modified on or after this date.
+
+4. Download Files:
 - Click on the "Grab Files" button to download .wpilog files from the robot and save them to the wpilog folder in the root directory
 
-4. Convert Files:
+5. Convert Files:
 - After downloading, click on the "Convert Files" button to convert the downloaded .wpilog files to .csv and .mf4.
 
 ## Scripts
