@@ -3,6 +3,7 @@ import struct
 import csv
 import asammdf
 from enum import Enum
+from collections import defaultdict
 
 # Function to parse WPILOG file
 def parse_wpilog(wpilog_file):
@@ -77,6 +78,16 @@ def decode_payload(entry_type, payload):
 
 # Function to convert parsed WPILOG to CSV
 def wpilog_to_csv(entries, records, csv_file):
+    # Use a dictionary to group data by timestamp
+    grouped_data = defaultdict(lambda: {entry_id: '' for entry_id in entries})
+
+    for record in records:
+        timestamp = record['timestamp'] / 1_000_000  # Convert to seconds
+        entry_id = record['entry_id']
+        entry_type = entries[entry_id]['type']
+        grouped_data[timestamp][entry_id] = decode_payload(entry_type, record['payload'])
+
+    # Write the grouped data to a CSV file
     with open(csv_file, 'w', newline='', encoding='utf-8') as outfile:
         writer = csv.writer(outfile)
         
@@ -84,19 +95,14 @@ def wpilog_to_csv(entries, records, csv_file):
         headers = ['timestamp'] + [entries[entry_id]['name'] for entry_id in entries if entries[entry_id]['name'] != 'NT:/SmartDashboard/Field/Robot']
         writer.writerow(headers)
         
-        # Write data
-        for record in records:
-            row = [record['timestamp'] / 1_000_000]  # Convert timestamp from microseconds to seconds
+        # Write rows
+        for timestamp, data in sorted(grouped_data.items()):
+            row = [timestamp]
             for entry_id in entries:
-                if entries[entry_id]['name'] == 'NT:/SmartDashboard/Field/Robot':
-                    continue
-                if record['entry_id'] == entry_id:
-                    entry_type = entries[entry_id]['type']
-                    decoded_payload = decode_payload(entry_type, record['payload'])
-                    row.append(decoded_payload)
-                else:
-                    row.append('')
+                if entries[entry_id]['name'] != 'NT:/SmartDashboard/Field/Robot':
+                    row.append(data[entry_id])
             writer.writerow(row)
+
 
 # Function to dynamically create enums
 def create_enum(name, values):
