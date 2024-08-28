@@ -2,6 +2,7 @@ import paramiko
 import os
 import time
 import tkinter as tk
+import tkinter.ttk as ttk
 from tkinter import messagebox, scrolledtext
 from tkcalendar import DateEntry
 import subprocess
@@ -20,6 +21,7 @@ def grab_files():
     terminal_output.delete(1.0, tk.END)
     team_number = entry_team_number.get()
     selected_date = cal.get_date()
+    operation = operation_var.get()
 
     if not team_number.isdigit() or not (1 <= int(team_number) <= 9999):
         messagebox.showerror("Invalid Input", "Please enter a valid team number between 1 and 9999.")
@@ -57,12 +59,14 @@ def grab_files():
                     file_attr = sftp.stat(f"logs/{file}")
                     file_mtime = datetime.fromtimestamp(file_attr.st_mtime)
 
-                    # Download files modified on or after the selected date
                     if file_mtime.date() >= selected_date:
                         local_file_path = os.path.join(wpilog_folder, file)
                         if not os.path.exists(local_file_path):
                             sftp.get(f"logs/{file}", local_file_path)
                             terminal_output.insert(tk.END, f"Downloaded: {file}\n")
+                            if operation == "Cut":
+                                sftp.remove(f"logs/{file}")
+                                terminal_output.insert(tk.END, f"Deleted from server: {file}\n")
                         else:
                             terminal_output.insert(tk.END, f"Skipping {file}, already exists.\n")
                     else:
@@ -102,7 +106,7 @@ def convert_files():
 # GUI Setup
 root = tk.Tk()
 root.title("WPIlog File Manager")
-root.geometry("800x450")
+root.geometry("800x400")
 
 # Team Number Input
 label_team_number = tk.Label(root, text="Enter Team Number:")
@@ -111,12 +115,25 @@ label_team_number.pack(pady=5)
 entry_team_number = tk.Entry(root)
 entry_team_number.pack(pady=5)
 
-# Date Picker
-label_date = tk.Label(root, text="Select Date:")
-label_date.pack(pady=5)
+# Frame to hold Date and Operation selection side by side
+frame = tk.Frame(root)
+frame.pack(pady=5)
 
-cal = DateEntry(root, width=12, background='darkblue', foreground='white', borderwidth=2)
-cal.pack(pady=5)
+# Date Picker
+label_date = tk.Label(frame, text="Select Date:")
+label_date.grid(row=0, column=0, padx=5)
+
+cal = DateEntry(frame, width=12, background='darkblue', foreground='white', borderwidth=2)
+cal.grid(row=0, column=1, padx=5)
+
+# Cut/Copy Drop
+label_operation = tk.Label(frame, text="Select Operation:")
+label_operation.grid(row=0, column=2, padx=5)
+
+operations = ["Copy", "Cut"]
+operation_var = tk.StringVar(value="Copy")
+operation_menu = ttk.Combobox(frame, textvariable=operation_var, values=operations, state="readonly", width=10)
+operation_menu.grid(row=0, column=3, padx=5)
 
 # Grab Files Button
 btn_grab_files = tk.Button(root, text="Grab Files", command=grab_files)
