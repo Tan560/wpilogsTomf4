@@ -89,31 +89,47 @@ def decode_payload(entry_type, payload):
     else:
         return payload  # If type is unknown, return raw payload
 
+from collections import defaultdict
+import csv
+
 # Function to convert parsed WPILOG to CSV
 def wpilog_to_csv(entries, records, csv_file):
     # Use a dictionary to group data by timestamp
-    grouped_data = defaultdict(lambda: {entry_id: '' for entry_id in entries})
+    grouped_data = defaultdict(lambda: {})
+
+    # Create a dictionary to store split entry names
+    split_entries = {}
 
     for record in records:
         timestamp = record['timestamp'] / 1_000_000  # Convert to seconds
         entry_id = record['entry_id']
         entry_type = entries[entry_id]['type']
-        grouped_data[timestamp][entry_id] = decode_payload(entry_type, record['payload'])
+        entry_name = entries[entry_id]['name']
+        decoded_data = decode_payload(entry_type, record['payload'])
+
+        if isinstance(decoded_data, tuple):  # Handle arrays
+            for i, value in enumerate(decoded_data):
+                split_entry_name = f"{entry_name}/{i}"
+                split_entries[split_entry_name] = split_entry_name
+                grouped_data[timestamp][split_entry_name] = value
+        else:
+            grouped_data[timestamp][entry_name] = decoded_data
 
     # Write the grouped data to a CSV file
     with open(csv_file, 'w', newline='', encoding='utf-8') as outfile:
         writer = csv.writer(outfile)
-        
-        # Write headers
-        headers = ['timestamp'] + [entries[entry_id]['name'] for entry_id in entries if entries[entry_id]['name'] != 'NT:/SmartDashboard/Field/Robot']
+
+        # Prepare the headers, including split entries
+        headers = ['timestamp'] + sorted(split_entries.keys()) + [
+            entries[entry_id]['name'] for entry_id in entries if entries[entry_id]['name'] not in split_entries and entries[entry_id]['name'] != 'NT:/SmartDashboard/Field/Robot'
+        ]
         writer.writerow(headers)
-        
+
         # Write rows
         for timestamp, data in sorted(grouped_data.items()):
             row = [timestamp]
-            for entry_id in entries:
-                if entries[entry_id]['name'] != 'NT:/SmartDashboard/Field/Robot':
-                    row.append(data[entry_id])
+            for header in headers[1:]:  # Skip 'timestamp'
+                row.append(data.get(header, ''))  # Get the value or use an empty string if not present
             writer.writerow(row)
 
 # Function to dynamically create enums
