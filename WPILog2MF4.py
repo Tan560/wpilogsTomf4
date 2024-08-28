@@ -2,7 +2,12 @@ import os
 import struct
 import csv
 import asammdf
+import struct
 from enum import Enum
+from collections import defaultdict
+
+# Initialize a set to keep track of unique entry types
+unique_entry_types = set()
 
 # Function to parse WPILOG file
 def parse_wpilog(wpilog_file):
@@ -17,7 +22,6 @@ def parse_wpilog(wpilog_file):
         version = struct.unpack('<H', header[6:8])[0]
         extra_header_length = struct.unpack('<I', f.read(4))[0]
         extra_header = f.read(extra_header_length)
-
         # Read records
         while True:
             record_header = f.read(1)
@@ -64,38 +68,68 @@ def parse_wpilog(wpilog_file):
 def decode_payload(entry_type, payload):
     if entry_type == 'int64':
         return struct.unpack('<q', payload)[0]
-    elif entry_type == 'float':
-        return struct.unpack('<f', payload)[0]
     elif entry_type == 'double':
         return struct.unpack('<d', payload)[0]
-    elif entry_type == 'boolean':
-        return struct.unpack('<?', payload)[0]
+    elif entry_type == 'int64[]':
+        # Assuming the array size is known; otherwise, infer it from the payload length
+        num_elements = len(payload) // 8  # 8 bytes per int64
+        return struct.unpack(f'<{num_elements}q', payload)
     elif entry_type == 'string':
         return payload.decode('utf-8')
+    elif entry_type == 'float[]':
+        # Assuming the array size is known; otherwise, infer it from the payload length
+        num_elements = len(payload) // 4  # 4 bytes per float
+        return struct.unpack(f'<{num_elements}f', payload)
+    elif entry_type == 'boolean':
+        return struct.unpack('<?', payload)[0]
+    elif entry_type == 'double[]':
+        # Assuming the array size is known; otherwise, infer it from the payload length
+        num_elements = len(payload) // 8  # 8 bytes per double
+        return struct.unpack(f'<{num_elements}d', payload)
     else:
-        return payload
+        return payload  # If type is unknown, return raw payload
+
+from collections import defaultdict
+import csv
 
 # Function to convert parsed WPILOG to CSV
 def wpilog_to_csv(entries, records, csv_file):
+    # Use a dictionary to group data by timestamp
+    grouped_data = defaultdict(lambda: {})
+
+    # Create a dictionary to store split entry names
+    split_entries = {}
+
+    for record in records:
+        timestamp = record['timestamp'] / 1_000_000  # Convert to seconds
+        entry_id = record['entry_id']
+        entry_type = entries[entry_id]['type']
+        entry_name = entries[entry_id]['name']
+        decoded_data = decode_payload(entry_type, record['payload'])
+
+        if isinstance(decoded_data, tuple):  # Handle arrays
+            for i, value in enumerate(decoded_data):
+                split_entry_name = f"{entry_name}/{i}"
+                split_entries[split_entry_name] = split_entry_name
+                grouped_data[timestamp][split_entry_name] = value
+        else:
+            grouped_data[timestamp][entry_name] = decoded_data
+
+    # Write the grouped data to a CSV file
     with open(csv_file, 'w', newline='', encoding='utf-8') as outfile:
         writer = csv.writer(outfile)
-        
-        # Write headers
-        headers = ['timestamp'] + [entries[entry_id]['name'] for entry_id in entries if entries[entry_id]['name'] != 'NT:/SmartDashboard/Field/Robot']
+
+        # Prepare the headers, including split entries
+        headers = ['timestamp'] + sorted(split_entries.keys()) + [
+            entries[entry_id]['name'] for entry_id in entries if entries[entry_id]['name'] not in split_entries and entries[entry_id]['name'] != 'NT:/SmartDashboard/Field/Robot'
+        ]
         writer.writerow(headers)
-        
-        # Write data
-        for record in records:
-            row = [record['timestamp'] / 1_000_000]  # Convert timestamp from microseconds to seconds
-            for entry_id in entries:
-                if entries[entry_id]['name'] == 'NT:/SmartDashboard/Field/Robot':
-                    continue
-                if record['entry_id'] == entry_id:
-                    entry_type = entries[entry_id]['type']
-                    decoded_payload = decode_payload(entry_type, record['payload'])
-                    row.append(decoded_payload)
-                else:
-                    row.append('')
+
+        # Write rows
+        for timestamp, data in sorted(grouped_data.items()):
+            row = [timestamp]
+            for header in headers[1:]:  # Skip 'timestamp'
+                row.append(data.get(header, ''))  # Get the value or use an empty string if not present
             writer.writerow(row)
 
 # Function to dynamically create enums
@@ -147,8 +181,17 @@ def csv_to_mf4(csv_file, mf4_file):
                     signals_dict[key]['timestamps'].append(timestamp)
                     signals_dict[key]['samples'].append(value)
 
+    # Find the maximum timestamp across all signals
+    max_timestamp = max(max(data['timestamps']) for data in signals_dict.values())
+
     # Append signals to MDF with comments for enums
     for key, data in signals_dict.items():
+        # Add a second point at the end of the overall timeline
+        data['timestamps'].append(max_timestamp)  # Append the final timestamp
+        
+        # Duplicate the last sample value
+        data['samples'].append(data['samples'][-1])  # Append the last sample value
+        
         signal = asammdf.Signal(
             samples=data['samples'],
             timestamps=data['timestamps'],
@@ -157,8 +200,8 @@ def csv_to_mf4(csv_file, mf4_file):
         
         # Add comments for enums
         if key in enums:
-            comments = {enum.value: enum.name for enum in enums[key]}
-            signal.comment = str(comments)
+            comments = "\n".join([f"{enum.value}: {enum.name}" for enum in enums[key]])
+            signal.comment = comments
         
         mdf.append(signal)
 
