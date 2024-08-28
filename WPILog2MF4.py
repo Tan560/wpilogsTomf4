@@ -2,8 +2,12 @@ import os
 import struct
 import csv
 import asammdf
+import struct
 from enum import Enum
 from collections import defaultdict
+
+# Initialize a set to keep track of unique entry types
+unique_entry_types = set()
 
 # Function to parse WPILOG file
 def parse_wpilog(wpilog_file):
@@ -18,7 +22,6 @@ def parse_wpilog(wpilog_file):
         version = struct.unpack('<H', header[6:8])[0]
         extra_header_length = struct.unpack('<I', f.read(4))[0]
         extra_header = f.read(extra_header_length)
-
         # Read records
         while True:
             record_header = f.read(1)
@@ -65,16 +68,26 @@ def parse_wpilog(wpilog_file):
 def decode_payload(entry_type, payload):
     if entry_type == 'int64':
         return struct.unpack('<q', payload)[0]
-    elif entry_type == 'float':
-        return struct.unpack('<f', payload)[0]
     elif entry_type == 'double':
         return struct.unpack('<d', payload)[0]
-    elif entry_type == 'boolean':
-        return struct.unpack('<?', payload)[0]
+    elif entry_type == 'int64[]':
+        # Assuming the array size is known; otherwise, infer it from the payload length
+        num_elements = len(payload) // 8  # 8 bytes per int64
+        return struct.unpack(f'<{num_elements}q', payload)
     elif entry_type == 'string':
         return payload.decode('utf-8')
+    elif entry_type == 'float[]':
+        # Assuming the array size is known; otherwise, infer it from the payload length
+        num_elements = len(payload) // 4  # 4 bytes per float
+        return struct.unpack(f'<{num_elements}f', payload)
+    elif entry_type == 'boolean':
+        return struct.unpack('<?', payload)[0]
+    elif entry_type == 'double[]':
+        # Assuming the array size is known; otherwise, infer it from the payload length
+        num_elements = len(payload) // 8  # 8 bytes per double
+        return struct.unpack(f'<{num_elements}d', payload)
     else:
-        return payload
+        return payload  # If type is unknown, return raw payload
 
 # Function to convert parsed WPILOG to CSV
 def wpilog_to_csv(entries, records, csv_file):
@@ -102,7 +115,6 @@ def wpilog_to_csv(entries, records, csv_file):
                 if entries[entry_id]['name'] != 'NT:/SmartDashboard/Field/Robot':
                     row.append(data[entry_id])
             writer.writerow(row)
-
 
 # Function to dynamically create enums
 def create_enum(name, values):
