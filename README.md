@@ -19,8 +19,8 @@ This project provides tools to convert `.wpilog` files, commonly used in FRC rob
 
 1. Ensure you have Python 3.x installed along with the following packages:
     ```bash
-        git clone https://github.com/yourusername/wpilog-converter.git
-        cd wpilog-converter
+    git clone https://github.com/yourusername/wpilog-converter.git
+    cd wpilog-converter
     ```
 
 2. Install the required Python packages:
