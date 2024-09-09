@@ -61,7 +61,7 @@ The robot's IP address is generated based on the team number using the format: `
 
 ### Example
 
-For team number `254`, the IP address would be `10.2.54.2`.
+For team number `302`, the IP address would be `10.3.2.2`.
 
 ## License
 
@@ -69,4 +69,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgements
 
-Thanks to the FRC community and contributors for their tools and inspiration.
+Thanks to FRC Team 6238 and the FRC community for their tools and inspiration.
