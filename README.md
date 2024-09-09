@@ -69,4 +69,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgements
 
-Thanks to FRC Team 6238 and the FRC community for their tools and inspiration.
+Thanks to FRC Team 6328 and the FRC community for their tools and inspiration.
