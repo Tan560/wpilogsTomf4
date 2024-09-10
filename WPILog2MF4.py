@@ -150,8 +150,7 @@ def wpilog_to_csv(entries, records, csv_file):
         writer = csv.writer(outfile)
 
         headers = ['timestamp'] + sorted(split_entries.keys()) + [
-            sanitize_signal_name(entries[entry_id]['name']) for entry_id in entries if entries[entry_id]['name'] not in split_entries and entries[entry_id]['name'] != 'NT:/SmartDashboard/Field/Robot'
-        ]
+            sanitize_signal_name(entries[entry_id]['name']) for entry_id in entries if entries[entry_id]['name'] not in split_entries]
         writer.writerow(headers)
 
         for timestamp, data in sorted(grouped_data.items()):
