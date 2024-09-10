@@ -10,7 +10,7 @@ unique_entry_types = set()
 
 # Function to sanitize signal names by removing or replacing problematic characters
 def sanitize_signal_name(name):
-    return name.replace(' ', '_').replace('//',"/")  # Replace periods with underscores (or other characters if needed)
+    return name.replace(' ', '_').replace('//',"/").replace('./',"/").replace('/.',"/").replace(':/',"/")  # Replace periods with underscores (or other characters if needed)
 
 # Function to parse WPILOG file
 def parse_wpilog(wpilog_file):
