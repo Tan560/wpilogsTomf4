@@ -29,6 +29,7 @@ def grab_files():
 
     sftp_ip = team_number_to_ip(team_number)
     os.environ["SFTP_SERVER_IP"] = sftp_ip
+    print(sftp_ip)
 
     def run_grab_files():
         try:
