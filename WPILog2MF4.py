@@ -193,7 +193,7 @@ def csv_to_mf4(csv_file, mf4_file):
             timestamp = float(row['timestamp'])
             for key, value in row.items():
                 if key != 'timestamp' and value:
-                    if "limelight" in key.lower() or "smartdashboard" in key.lower():
+                    if "limelight" in key.lower() or "smartdashboard/alliance" in key.lower() or "smartdashboard/startpos" in key.lower() or "smartdashboard/numof" in key.lower():
                         continue  # Skip limelight and SmartDashboard entries
                     try:
                         value = float(value)
