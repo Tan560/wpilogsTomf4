@@ -14,7 +14,7 @@ def team_number_to_ip(team_number):
     team_number = int(team_number)
     high_byte = (team_number // 100) % 100
     low_byte = team_number % 100
-    return f"10.{high_byte:02d}.{low_byte:02d}.2"
+    return f"10.{high_byte:0d}.{low_byte:0d}.2"
 
 # Function to handle grabbing files
 def grab_files():
@@ -45,8 +45,7 @@ def grab_files():
                     break
                 except (paramiko.SSHException, TimeoutError) as e:
                     attempts += 1
-                    time.sleep(5)
-
+                    
             if attempts == max_attempts:
                 messagebox.showerror("Error", f"Failed to connect after {max_attempts} attempts. Exiting.")
                 return
