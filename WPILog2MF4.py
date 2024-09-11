@@ -175,6 +175,8 @@ def csv_to_mf4(csv_file, mf4_file):
         for row in reader:
             for key, value in row.items():
                 if key != 'timestamp' and value:
+                    if value.lower() in ['true', 'false']:
+                        continue  # Skip collecting boolean strings in enums
                     try:
                         float(value)
                     except ValueError:
@@ -195,13 +197,20 @@ def csv_to_mf4(csv_file, mf4_file):
                 if key != 'timestamp' and value:
                     if "limelight" in key.lower() or "smartdashboard/alliance" in key.lower() or "smartdashboard/startpos" in key.lower() or "smartdashboard/numof" in key.lower():
                         continue  # Skip limelight and SmartDashboard entries
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        if key in enums:
-                            value = enums[key][value].value
-                        else:
-                            continue  # Skip values that are not in the enum
+
+                    # Handle boolean string values
+                    if value.lower() == 'true':
+                        value = 1
+                    elif value.lower() == 'false':
+                        value = 0
+                    else:
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            if key in enums:
+                                value = enums[key][value].value
+                            else:
+                                continue  # Skip values that are not in the enum
 
                     if key not in signals_dict:
                         signals_dict[key] = {'timestamps': [], 'samples': []}
