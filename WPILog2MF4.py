@@ -2,12 +2,15 @@ import os
 import struct
 import csv
 import asammdf
-import struct
 from enum import Enum
 from collections import defaultdict
 
 # Initialize a set to keep track of unique entry types
 unique_entry_types = set()
+
+# Function to sanitize signal names by removing or replacing problematic characters
+def sanitize_signal_name(name):
+    return name.replace(' ', '_').replace('//',"/").replace('./',"/").replace('/.',"/").replace(':/',"/")  # Replace periods with underscores (or other characters if needed)
 
 # Function to parse WPILOG file
 def parse_wpilog(wpilog_file):
@@ -66,70 +69,94 @@ def parse_wpilog(wpilog_file):
 
 # Function to decode payload based on entry type
 def decode_payload(entry_type, payload):
+    if entry_type not in unique_entry_types:
+        print(f"Decoding new entry type: {entry_type}")
+        unique_entry_types.add(entry_type)
+
     if entry_type == 'int64':
         return struct.unpack('<q', payload)[0]
     elif entry_type == 'double':
         return struct.unpack('<d', payload)[0]
-    elif entry_type == 'int64[]':
-        # Assuming the array size is known; otherwise, infer it from the payload length
-        num_elements = len(payload) // 8  # 8 bytes per int64
-        return struct.unpack(f'<{num_elements}q', payload)
+    elif entry_type == 'boolean':
+        return struct.unpack('<?', payload)[0]
     elif entry_type == 'string':
         return payload.decode('utf-8')
     elif entry_type == 'float[]':
-        # Assuming the array size is known; otherwise, infer it from the payload length
-        num_elements = len(payload) // 4  # 4 bytes per float
+        num_elements = len(payload) // 4
         return struct.unpack(f'<{num_elements}f', payload)
-    elif entry_type == 'boolean':
-        return struct.unpack('<?', payload)[0]
     elif entry_type == 'double[]':
-        # Assuming the array size is known; otherwise, infer it from the payload length
-        num_elements = len(payload) // 8  # 8 bytes per double
+        num_elements = len(payload) // 8
         return struct.unpack(f'<{num_elements}d', payload)
+    elif entry_type == 'int64[]':
+        num_elements = len(payload) // 8
+        return struct.unpack(f'<{num_elements}q', payload)
+    elif entry_type == 'boolean[]':
+        return struct.unpack(f'<{len(payload)}?', payload)
+    elif entry_type == 'string[]':
+        return payload.decode('utf-8').split('\x00')
+    elif entry_type == 'structschema':
+        return payload.decode('utf-8')
+    elif entry_type.startswith('struct:'):
+        struct_type = entry_type.split(':')[1]
+        if struct_type == 'Pose2d':
+            translation_x, translation_y, rotation = struct.unpack('<3d', payload)
+            return {'Translation2d_x': translation_x, 'Translation2d_y': translation_y, 'Rotation2d': rotation}
+        elif struct_type == 'SwerveModuleState':
+            speed, angle = struct.unpack('<2d', payload)
+            return {'SwerveModuleState_speed': speed, 'SwerveModuleState_angle': angle}
+        elif struct_type == 'ChassisSpeeds':
+            vx, vy, omega = struct.unpack('<3d', payload)
+            return {'ChassisSpeeds_vx': vx, 'ChassisSpeeds_vy': vy, 'ChassisSpeeds_omega': omega}
+        elif struct_type == 'Translation2d':
+            x, y = struct.unpack('<2d', payload)
+            return {'Translation2d_x': x, 'Translation2d_y': y}
+        elif struct_type == 'Rotation2d':
+            value = struct.unpack('<d', payload)[0]
+            return {'Rotation2d_value': value}
+        else:
+            return payload
+    elif entry_type == 'json':
+        return payload.decode('utf-8')
     else:
-        return payload  # If type is unknown, return raw payload
-
-from collections import defaultdict
-import csv
+        return payload
 
 # Function to convert parsed WPILOG to CSV
 def wpilog_to_csv(entries, records, csv_file):
-    # Use a dictionary to group data by timestamp
     grouped_data = defaultdict(lambda: {})
 
-    # Create a dictionary to store split entry names
     split_entries = {}
 
     for record in records:
         timestamp = record['timestamp'] / 1_000_000  # Convert to seconds
         entry_id = record['entry_id']
         entry_type = entries[entry_id]['type']
-        entry_name = entries[entry_id]['name']
+        entry_name = sanitize_signal_name(entries[entry_id]['name'])  # Sanitize name
         decoded_data = decode_payload(entry_type, record['payload'])
 
-        if isinstance(decoded_data, tuple):  # Handle arrays
+        if isinstance(decoded_data, dict):  # Handle structured data
+            for key, value in decoded_data.items():
+                split_entry_name = f"{entry_name}_{key}"  # Sanitize names
+                split_entries[split_entry_name] = split_entry_name
+                grouped_data[timestamp][split_entry_name] = value
+        elif isinstance(decoded_data, tuple):  # Handle arrays
             for i, value in enumerate(decoded_data):
-                split_entry_name = f"{entry_name}/{i}"
+                split_entry_name = f"{entry_name}_{i}"  # Sanitize array names
                 split_entries[split_entry_name] = split_entry_name
                 grouped_data[timestamp][split_entry_name] = value
         else:
             grouped_data[timestamp][entry_name] = decoded_data
 
-    # Write the grouped data to a CSV file
     with open(csv_file, 'w', newline='', encoding='utf-8') as outfile:
         writer = csv.writer(outfile)
 
-        # Prepare the headers, including split entries
         headers = ['timestamp'] + sorted(split_entries.keys()) + [
-            entries[entry_id]['name'] for entry_id in entries if entries[entry_id]['name'] not in split_entries and entries[entry_id]['name'] != 'NT:/SmartDashboard/Field/Robot'
-        ]
+            sanitize_signal_name(entries[entry_id]['name']) for entry_id in entries if entries[entry_id]['name'] not in split_entries]
         writer.writerow(headers)
 
-        # Write rows
         for timestamp, data in sorted(grouped_data.items()):
             row = [timestamp]
-            for header in headers[1:]:  # Skip 'timestamp'
-                row.append(data.get(header, ''))  # Get the value or use an empty string if not present
+            for header in headers[1:]:
+                row.append(data.get(header, ''))
             writer.writerow(row)
 
 # Function to dynamically create enums
@@ -148,6 +175,8 @@ def csv_to_mf4(csv_file, mf4_file):
         for row in reader:
             for key, value in row.items():
                 if key != 'timestamp' and value:
+                    if value.lower() in ['true', 'false']:
+                        continue  # Skip collecting boolean strings in enums
                     try:
                         float(value)
                     except ValueError:
@@ -159,7 +188,6 @@ def csv_to_mf4(csv_file, mf4_file):
     enums = {key: create_enum(key, values) for key, values in string_values.items()}
 
     # Second pass to convert values and collect data
-    
     with open(csv_file, 'r', encoding='utf-8') as infile:
         reader = csv.DictReader(infile)
         print("Converting File: " + csv_file)
@@ -167,13 +195,22 @@ def csv_to_mf4(csv_file, mf4_file):
             timestamp = float(row['timestamp'])
             for key, value in row.items():
                 if key != 'timestamp' and value:
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        if key in enums:
-                            value = enums[key][value].value
-                        else:
-                            continue  # Skip values that are not in the enum
+                    if "limelight" in key.lower() or "smartdashboard/alliance" in key.lower() or "smartdashboard/startpos" in key.lower() or "smartdashboard/numof" in key.lower():
+                        continue  # Skip limelight and SmartDashboard entries
+
+                    # Handle boolean string values
+                    if value.lower() == 'true':
+                        value = 1
+                    elif value.lower() == 'false':
+                        value = 0
+                    else:
+                        try:
+                            value = float(value)
+                        except ValueError:
+                            if key in enums:
+                                value = enums[key][value].value
+                            else:
+                                continue  # Skip values that are not in the enum
 
                     if key not in signals_dict:
                         signals_dict[key] = {'timestamps': [], 'samples': []}
@@ -187,10 +224,10 @@ def csv_to_mf4(csv_file, mf4_file):
     # Append signals to MDF with comments for enums
     for key, data in signals_dict.items():
         # Add a second point at the end of the overall timeline
-        data['timestamps'].append(max_timestamp)  # Append the final timestamp
+        data['timestamps'].append(max_timestamp)
         
         # Duplicate the last sample value
-        data['samples'].append(data['samples'][-1])  # Append the last sample value
+        data['samples'].append(data['samples'][-1])
         
         signal = asammdf.Signal(
             samples=data['samples'],
